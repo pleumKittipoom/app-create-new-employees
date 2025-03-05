@@ -92,7 +92,7 @@ def index():
 
         for file in daily_report_files:
             if not validate_filename(file.filename, "Daily_report") and not validate_filename(file.filename, "Daily Report"):
-                return "Error: Daily Report files must be named 'Daily Report_YYYYMMDD_Name_Surname.xlsx'", 400
+                return "Error: Daily Report files must be named 'Daily report_YYYYMMDD_Name_Surname.xlsx'", 400
         
         # อ่านข้อมูลจากไฟล์ที่อัปโหลด
         df_new_employee = pd.read_excel(new_employee_file)
