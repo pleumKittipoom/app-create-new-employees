@@ -4,6 +4,12 @@ from flask import Flask, render_template_string, request
 
 app = Flask(__name__)
 
+# อนุญาตให้อัปโหลดเฉพาะไฟล์ Excel เท่านั้น
+ALLOWED_EXTENSIONS = {"xlsx", "xls"}
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # HTML Template
 TEMPLATE = """
 <!DOCTYPE html>
@@ -64,9 +70,16 @@ TEMPLATE = """
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # รับไฟล์จากฟอร์ม
         daily_report_files = request.files.getlist('daily_report')
         new_employee_file = request.files['new_employee']
+        
+        # ตรวจสอบประเภทไฟล์ก่อนอ่าน
+        if not allowed_file(new_employee_file.filename):
+            return "Error: Only Excel files (.xlsx, .xls) are allowed!", 400
+        
+        for file in daily_report_files:
+            if not allowed_file(file.filename):
+                return "Error: Only Excel files (.xlsx, .xls) are allowed!", 400
         
         # อ่านข้อมูลจากไฟล์ที่อัปโหลด
         df_new_employee = pd.read_excel(new_employee_file)
@@ -91,5 +104,4 @@ def index():
     return render_template_string(TEMPLATE, data=None)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
-
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
