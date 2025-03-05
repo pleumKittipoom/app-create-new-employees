@@ -10,6 +10,11 @@ ALLOWED_EXTENSIONS = {"xlsx", "xls"}
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def validate_filename(filename, expected_prefix):
+    # แทนที่ช่องว่างเป็น "_" เพื่อรองรับไฟล์ที่มีช่องว่าง
+    formatted_filename = filename.replace(" ", "_")
+    return formatted_filename.startswith(expected_prefix) and formatted_filename.endswith(('.xlsx', '.xls'))
+
 # HTML Template
 TEMPLATE = """
 <!DOCTYPE html>
@@ -81,6 +86,14 @@ def index():
             if not allowed_file(file.filename):
                 return "Error: Only Excel files (.xlsx, .xls) are allowed!", 400
         
+        # ตรวจสอบชื่อไฟล์ก่อนอ่าน
+        if not validate_filename(new_employee_file.filename, "New_Employee") and not validate_filename(new_employee_file.filename, "New Employee"):
+            return "Error: New Employee file must be named 'New Employee_YYYYMM.xlsx'", 400
+
+        for file in daily_report_files:
+            if not validate_filename(file.filename, "Daily_report") and not validate_filename(file.filename, "Daily Report"):
+                return "Error: Daily Report files must be named 'Daily Report_YYYYMMDD_Name_Surname.xlsx'", 400
+        
         # อ่านข้อมูลจากไฟล์ที่อัปโหลด
         df_new_employee = pd.read_excel(new_employee_file)
         
@@ -88,7 +101,7 @@ def index():
         for file in daily_report_files:
             df = pd.read_excel(file)
             filename_parts = file.filename.replace("Daily_report_", "").replace(".xlsx", "").split("_")
-            team_member = f"{filename_parts[1]} {filename_parts[2]}"
+            team_member = f"{filename_parts[2]} {filename_parts[3]}"
             df["Team Member"] = team_member
             all_reports.append(df)
         
